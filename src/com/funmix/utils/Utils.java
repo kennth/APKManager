@@ -103,31 +103,29 @@ public class Utils {
 		}
 		return null;
 	}
-	
-	public static byte[] getFileContent(String filePath) throws IOException {  
-        File file = new File(filePath);  
-        log.info(filePath);
-        long fileSize = file.length();  
-        if (fileSize > Integer.MAX_VALUE) {  
-            System.out.println("file too big...");  
-            return null;  
-        }  
-        FileInputStream fi = new FileInputStream(file);  
-        byte[] buffer = new byte[(int) fileSize];  
-        int offset = 0;  
-        int numRead = 0;  
-        while (offset < buffer.length  
-        && (numRead = fi.read(buffer, offset, buffer.length - offset)) >= 0) {  
-            offset += numRead;  
-        }  
-        // 确保所有数据均被读取  
-        if (offset != buffer.length) {  
-        throw new IOException("Could not completely read file "  
-                    + file.getName());  
-        }  
-        fi.close();  
-        return buffer;  
-    }  
+
+	public static byte[] getFileContent(String filePath) throws IOException {
+		File file = new File(filePath);
+		log.info(filePath);
+		long fileSize = file.length();
+		if (fileSize > Integer.MAX_VALUE) {
+			System.out.println("file too big...");
+			return null;
+		}
+		FileInputStream fi = new FileInputStream(file);
+		byte[] buffer = new byte[(int) fileSize];
+		int offset = 0;
+		int numRead = 0;
+		while (offset < buffer.length && (numRead = fi.read(buffer, offset, buffer.length - offset)) >= 0) {
+			offset += numRead;
+		}
+		// 确保所有数据均被读取
+		if (offset != buffer.length) {
+			throw new IOException("Could not completely read file " + file.getName());
+		}
+		fi.close();
+		return buffer;
+	}
 
 	public static void saveToFile(String destUrl, String fileName) throws IOException {
 		int BUFFER_SIZE = 4096;
@@ -264,10 +262,10 @@ public class Utils {
 				result = result + line + "\r\n";
 			}
 			while ((line = errorReader.readLine()) != null) {
-				/*
-				 * if(line!=null && line.length()>0) log.error("execCMD error:"
-				 * + line);
-				 */
+
+				if (line != null && line.length() > 0)
+					log.error("execCMD error:" + line);
+
 			}
 			p.getOutputStream().close();
 			p.destroy();
@@ -297,46 +295,46 @@ public class Utils {
 		java.text.DecimalFormat df = new java.text.DecimalFormat("#.##");
 		return df.format(num);
 	}
-	
-	public static String genAndrodid(){		  
-        String str="ABCDEF0123456789"; 
-        StringBuffer sb = new StringBuffer();	          
-        for(int i = 0 ; i < 16; ++i){	              
-            sb.append(str.charAt(getRandom(0,str.length()-1)));  
-        }  
-        return sb.toString();	     
+
+	public static String genAndrodid() {
+		String str = "ABCDEF0123456789";
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < 16; ++i) {
+			sb.append(str.charAt(getRandom(0, str.length() - 1)));
+		}
+		return sb.toString();
 	}
 
-	public static String genImsi() {		
-		return "460" + getRandom(1000,9999) + getRandom(1000,9999)+ getRandom(1000,9999) ;
+	public static String genImsi() {
+		return "460" + getRandom(1000, 9999) + getRandom(1000, 9999) + getRandom(1000, 9999);
 	}
 
 	public static String genSimserial() {
-		return "8986" + getRandom(1000,9999) + getRandom(1000,9999)+ getRandom(1000,9999)+ getRandom(1000,9999) ;
+		return "8986" + getRandom(1000, 9999) + getRandom(1000, 9999) + getRandom(1000, 9999) + getRandom(1000, 9999);
 	}
 
 	public static String genSerialno(String model) {
-		String str="ABCDEF0123456789"; 
-        StringBuffer sb = new StringBuffer();	
-        sb.append(model.substring(0,2));
-        for(int i = 0 ; i < 8; ++i){	              
-            sb.append(str.charAt(getRandom(0,str.length()-1)));  
-        }  
-        return sb.toString();	    
+		String str = "ABCDEF0123456789";
+		StringBuffer sb = new StringBuffer();
+		sb.append(model.substring(0, 2));
+		for (int i = 0; i < 8; ++i) {
+			sb.append(str.charAt(getRandom(0, str.length() - 1)));
+		}
+		return sb.toString();
 	}
-	
-	public static String getPinYinHeadChar(String str) {  
-        String convert = "";  
-        for (int j = 0; j < str.length(); j++) {  
-            char word = str.charAt(j);  
-            // 提取汉字的首字母  
-            String[] pinyinArray = PinyinHelper.toHanyuPinyinStringArray(word);  
-            if (pinyinArray != null) {  
-                convert += pinyinArray[0].charAt(0);  
-            } else {  
-                convert += word;  
-            }  
-        }  
-        return convert;  
-    }  
+
+	public static String getPinYinHeadChar(String str) {
+		String convert = "";
+		for (int j = 0; j < str.length(); j++) {
+			char word = str.charAt(j);
+			// 提取汉字的首字母
+			String[] pinyinArray = PinyinHelper.toHanyuPinyinStringArray(word);
+			if (pinyinArray != null) {
+				convert += pinyinArray[0].charAt(0);
+			} else {
+				convert += word;
+			}
+		}
+		return convert;
+	}
 }

@@ -8,5 +8,7 @@
 	<classpathentry kind="lib" path="lib/mysql-connector-java-5.1.0-bin.jar"/>
 	<classpathentry kind="lib" path="lib/pinyin4j-2.5.0.jar"/>
 	<classpathentry kind="lib" path="lib/tomcat-dbcp.jar"/>
+	<classpathentry kind="lib" path="/ADBWorker/lib/MSDK_Android_2.8.1a_svn57793.jar"/>
+	<classpathentry kind="lib" path="lib/jdom-2.x-2016.06.27.14.23.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
