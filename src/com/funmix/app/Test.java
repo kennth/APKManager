@@ -41,13 +41,36 @@ public class Test {
 		 * for(int i=13;i<=18;i++) genRerunScript(i);
 		 */
 		// System.out.println(getDevfromIP("192.169.33.104"));
-		/*
-		 * for(int i=1;i<=28;i++){ //genStopScript(i); genRerunScript(i); }
-		 */
+		
+		 for(int i=8;i<=8;i++){ 
+			 //genStopScript(i); 
+			 //genRerunScript(i); 
+			 System.out.println(genTestUrl(i));
+			 genGameInfo(i);
+		 }
+		 
 		/*
 		 * genStopScript(34); genRerunScript(34);
 		 */
-		fixCMCCTask();
+		//fixCMCCTask();
+		genGameInfo(111);
+	}
+	
+	private static String genTestUrl(int id){
+		String url = "";
+		try {
+			Connection conn = DBMgr.getCon("helper");
+			PreparedStatement stmt = conn.prepareStatement("select cpid,cid,chid from tcmcctask where id = ?");
+			stmt.setInt(1, id);
+			ResultSet rs = stmt.executeQuery();
+			if (rs.next()) {
+				url = "curl \"http://183.129.241.3:8800/vcode?ms=15900000000&cpid=" + rs.getString("cpid") + "&cid=" + rs.getString("cid")+ "&chid=" + rs.getString("chid") + "&imei=867194028591199&imsi=460025824103409&pid=006068968010&cpparam=1234567890123456\"";
+			}
+			DbUtils.closeQuietly(conn);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return url;
 	}
 	
 	private static void fixCMCCTask() {
