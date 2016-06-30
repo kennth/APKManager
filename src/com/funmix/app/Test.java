@@ -32,28 +32,25 @@ import com.tencent.msdk.tea.Base64;
 public class Test {
 
 	public static void main(String[] args) {
-		// processFiles();
-		// moveFiles();
+		
+		 
 		//parseAPK("ld2016_wl.apk");
-		// genGameInfo(34);
+		// genGameInfo(29);
+		
 		// genGameList();
 		/*
 		 * for(int i=13;i<=18;i++) genRerunScript(i);
 		 */
 		// System.out.println(getDevfromIP("192.169.33.104"));
-		
+
 		 for(int i=8;i<=8;i++){ 
 			 //genStopScript(i); 
 			 //genRerunScript(i); 
 			 System.out.println(genTestUrl(i));
 			 genGameInfo(i);
 		 }
-		 
-		/*
-		 * genStopScript(34); genRerunScript(34);
-		 */
-		//fixCMCCTask();
-		genGameInfo(111);
+		procCMCCTask();
+		//genFirstStartScript();
 	}
 	
 	private static String genTestUrl(int id){
@@ -73,8 +70,30 @@ public class Test {
 		return url;
 	}
 	
-	private static void fixCMCCTask() {
-		try {
+	private static void genFirstStartScript() {
+		try {	
+			processFiles();
+			moveFiles();
+			Connection conn = DBMgr.getCon("helper");
+			PreparedStatement stmt = conn.prepareStatement("select id from tcmcctask where status=9 order by worker");
+			ResultSet rs = stmt.executeQuery();
+			while(rs.next()){
+				genStopScript(rs.getInt(1));
+			}
+			rs = stmt.executeQuery();
+			while(rs.next()){				
+				genRerunScript(rs.getInt(1));				
+			}
+			DbUtils.closeQuietly(conn);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
+	private static void procCMCCTask() {
+		try {		
+			processFiles();
+			moveFiles();
 			Connection conn = DBMgr.getCon("helper");
 			PreparedStatement stmt = conn.prepareStatement("select apkname from tcmcctask where cid is null");
 			ResultSet rs = stmt.executeQuery();
@@ -90,7 +109,7 @@ public class Test {
 	private static void moveFiles() {
 		try {
 			Connection conn = DBMgr.getCon("helper");
-			PreparedStatement stmt = conn.prepareStatement("select apkname from tcmcctask where filename = ?");
+			PreparedStatement stmt = conn.prepareStatement("select apkname from tcmcctask where filename = ? and apkname is not null");
 			ResultSet rs;
 			File[] flist = new File("d:\\ADBWorker\\crack").listFiles();
 			for (File f : flist) {
