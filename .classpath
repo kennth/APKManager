@@ -10,5 +10,8 @@
 	<classpathentry kind="lib" path="lib/tomcat-dbcp.jar"/>
 	<classpathentry kind="lib" path="/ADBWorker/lib/MSDK_Android_2.8.1a_svn57793.jar"/>
 	<classpathentry kind="lib" path="lib/jdom-2.x-2016.06.27.14.23.jar"/>
+	<classpathentry kind="lib" path="lib/org.apache.httpcomponents.httpclient_4.2.5.jar"/>
+	<classpathentry kind="lib" path="lib/org.apache.httpcomponents.httpcore_4.2.5.jar"/>
+	<classpathentry kind="lib" path="lib/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

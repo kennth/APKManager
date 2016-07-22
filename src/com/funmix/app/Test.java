@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -12,11 +13,24 @@ import java.security.cert.X509Certificate;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.crypto.Cipher;
 
 import org.apache.commons.dbutils.DbUtils;
+import org.apache.http.Consts;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.params.ConnRouteParams;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 import org.jdom2.Attribute;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -37,20 +51,153 @@ public class Test {
 		//parseAPK("ld2016_wl.apk");
 		// genGameInfo(29);
 		
-		// genGameList();
+		//genGameList();
 		/*
 		 * for(int i=13;i<=18;i++) genRerunScript(i);
 		 */
 		// System.out.println(getDevfromIP("192.169.33.104"));
 
-		 for(int i=8;i<=8;i++){ 
+		/*for(int i=25;i<=25;i++){ 
 			 //genStopScript(i); 
 			 //genRerunScript(i); 
-			 System.out.println(genTestUrl(i));
+			 //System.out.println(genTestUrl(i));
 			 genGameInfo(i);
-		 }
-		procCMCCTask();
+		 }*/
+		//processFiles();
+		//procCMCCTask();
 		//genFirstStartScript();
+		genGameInfo(44);
+		//chargeTest1(44);
+		//chargeTest2("CwrpnKy5IGl8","065291");
+		//getMobArea();
+	}
+	
+	private static void getMobArea() {
+		try {
+			String url = "";
+			Connection conn = DBMgr.getCon("helper");
+			PreparedStatement stmt = conn.prepareStatement("select mobile from tmpmob where area is null");
+			PreparedStatement upstmt = conn.prepareStatement("update tmpmob set area = ? where mobile = ?");
+			ResultSet rs = stmt.executeQuery();			
+
+			HttpClient client = new DefaultHttpClient();
+			HttpGet httpget;HttpResponse response;
+			String codeNumb = "";String area;
+			while (rs.next()) {
+				url = "https://tcc.taobao.com/cc/json/mobile_tel_segment.htm?tel=" + rs.getString(1);
+				httpget = new HttpGet(url);				
+				// httppost.setHeader("Host", "");
+				httpget.setHeader("Connection", "keep-alive");
+				httpget.setHeader("Accept", "*/*");
+				httpget.setHeader("Origin", "https://tcc.taobao.com");
+				httpget.setHeader("X-Requested-With", "XMLHttpRequest");
+				httpget.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2540.0 Safari/537.36");
+				httpget.setHeader("Content-Type", "application/x-www-form-urlencoded");
+				httpget.setHeader("Accept-Encoding", "deflate");
+				httpget.setHeader("Accept-Language", "zh-CN,zh;q=0.8");
+
+				response = client.execute(httpget);
+				int resCode = response.getStatusLine().getStatusCode();				
+				int pos = 0;
+				if (resCode == 200) {
+					codeNumb = EntityUtils.toString(response.getEntity());
+					System.out.println(codeNumb);
+					pos = codeNumb.indexOf("province");
+					area = codeNumb.substring(pos + 10, codeNumb.indexOf("',", pos));
+					//System.out.println(rs.getString(1) + ":" + area);
+					upstmt.setString(1, area);
+					upstmt.setString(2, rs.getString(1));
+					upstmt.executeUpdate();					
+				} else {
+					System.out.println("get code failed!");
+				}
+			}
+			DbUtils.closeQuietly(conn);
+		} catch (UnsupportedEncodingException e) {
+			System.out.println(e.getMessage());
+		} catch (ClientProtocolException e) {
+			System.out.println(e.getMessage());
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
+	private static void chargeTest1(int id) {
+		try {
+			String url = "";
+			Connection conn = DBMgr.getCon("helper");
+			PreparedStatement stmt = conn.prepareStatement("select cpid,cid,chid from tcmcctask where id = ?");
+			stmt.setInt(1, id);
+			ResultSet rs = stmt.executeQuery();
+			if (rs.next()) {
+				url = "http://183.129.241.3:8800/vcode?ms=13957186436&cpid=" + rs.getString("cpid") + "&cid=" + rs.getString("cid")+ "&chid=" + rs.getString("chid") + "&imei=351602398748242&imsi=460020597484618&pid=006111097015&cpparam=1234567890";
+			}
+			DbUtils.closeQuietly(conn);
+			
+			HttpClient client = new DefaultHttpClient();		
+			HttpGet httpget = new HttpGet(url);
+			//httppost.setHeader("Host", "");
+			httpget.setHeader("Connection", "keep-alive");
+			httpget.setHeader("Accept", "*/*");
+			httpget.setHeader("Origin", "http://zj.189.cn");
+			httpget.setHeader("X-Requested-With", "XMLHttpRequest");
+			httpget.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2540.0 Safari/537.36");
+			httpget.setHeader("Content-Type", "application/x-www-form-urlencoded");
+			httpget.setHeader("Accept-Encoding", "deflate");
+			httpget.setHeader("Accept-Language", "zh-CN,zh;q=0.8");
+
+			HttpResponse response = client.execute(httpget);
+			int resCode = response.getStatusLine().getStatusCode();
+			String codeNumb = "";
+			if (resCode == 200) {
+				codeNumb = EntityUtils.toString(response.getEntity());
+				System.out.println(codeNumb);
+			} else {
+				System.out.println("get code failed!");
+			}
+		} catch (UnsupportedEncodingException e) {
+			System.out.println(e.getMessage());
+		} catch (ClientProtocolException e) {
+			System.out.println(e.getMessage());
+		} catch (IOException e) {
+			System.out.println(e.getMessage());			
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
+	private static void chargeTest2(String sid,String vcode) {
+		try {
+			HttpClient client = new DefaultHttpClient();		
+			HttpGet httpget = new HttpGet("http://183.129.241.3:8800/vpay?sid=" + sid + "&vcode=" + vcode);
+			//httppost.setHeader("Host", "");
+			httpget.setHeader("Connection", "keep-alive");
+			httpget.setHeader("Accept", "*/*");
+			httpget.setHeader("Origin", "http://zj.189.cn");
+			httpget.setHeader("X-Requested-With", "XMLHttpRequest");
+			httpget.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2540.0 Safari/537.36");
+			httpget.setHeader("Content-Type", "application/x-www-form-urlencoded");
+			httpget.setHeader("Accept-Encoding", "deflate");
+			httpget.setHeader("Accept-Language", "zh-CN,zh;q=0.8");
+
+			HttpResponse response = client.execute(httpget);
+			int resCode = response.getStatusLine().getStatusCode();
+			String codeNumb = "";
+			if (resCode == 200) {
+				codeNumb = EntityUtils.toString(response.getEntity());
+				System.out.println(codeNumb);
+			} else {
+				System.out.println("get code failed!");
+			}
+		} catch (UnsupportedEncodingException e) {
+			System.out.println(e.getMessage());
+		} catch (ClientProtocolException e) {
+			System.out.println(e.getMessage());
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		}
 	}
 	
 	private static String genTestUrl(int id){
@@ -91,11 +238,10 @@ public class Test {
 	}
 	
 	private static void procCMCCTask() {
-		try {		
-			processFiles();
+		try {					
 			moveFiles();
 			Connection conn = DBMgr.getCon("helper");
-			PreparedStatement stmt = conn.prepareStatement("select apkname from tcmcctask where cid is null");
+			PreparedStatement stmt = conn.prepareStatement("select apkname from tcmcctask where cid is null or cid=''");
 			ResultSet rs = stmt.executeQuery();
 			while(rs.next()){
 				parseAPK(rs.getString(1));
@@ -152,7 +298,7 @@ public class Test {
 			PreparedStatement stmt = conn.prepareStatement("select game,cid,chid,worker,activity from tcmcctask where game<>''   order by game");
 			ResultSet rs = stmt.executeQuery();
 			while (rs.next()) {
-				System.out.println(rs.getString(2) + "-" + rs.getString(3) + "\t" + rs.getString(1) + "\t" + rs.getString(4) + "\t" + rs.getString(5) + "");
+				System.out.println(rs.getString(2) + "-" + rs.getString(3) + "\t" + rs.getString(1));// + "\t" + rs.getString(4) + "\t" + rs.getString(5) + "");
 				;
 			}
 			DbUtils.closeQuietly(conn);
@@ -185,7 +331,6 @@ public class Test {
 			ResultSet rs = stmt.executeQuery();
 			if (rs.next()) {
 				System.out.println("./startapp.sh " + rs.getString(1) + " " + rs.getString(2) + " >> rerun.log &");
-				;
 			}
 			DbUtils.closeQuietly(conn);
 		} catch (Exception e) {
@@ -256,8 +401,8 @@ public class Test {
 			System.out.println(pkg);
 			List<Element> list = doc.getRootElement().getChild("application").getChildren("activity");
 			for (Element el : list) {
-				if (el.getChild("intent-filter") != null && el.getChild("intent-filter").getChild("action") != null) {
-					if (el.getChild("intent-filter").getChild("action").getAttributes().get(0).getValue().equals("android.intent.action.MAIN")) {
+				if (el.getChild("intent-filter") != null && el.getChild("intent-filter").getChild("category") != null) {
+					if (el.getChild("intent-filter").getChild("category").getAttributes().get(0).getValue().equals("android.intent.category.LAUNCHER")) {
 						List<Attribute> list1 = el.getAttributes();
 						for (Attribute al : list1) {
 							if (al.getName().equals("name")) {
