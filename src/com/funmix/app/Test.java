@@ -65,10 +65,10 @@ public class Test {
 		 }*/
 		//processFiles();
 		//procCMCCTask();
-		//genFirstStartScript();
-		genGameInfo(44);
-		//chargeTest1(44);
-		//chargeTest2("CwrpnKy5IGl8","065291");
+		//genFirstStartScript();		
+		genGameInfo(34);
+		//chargeTest1(33);
+		//chargeTest2("0f34k49OpKpQ","069614");
 		//getMobArea();
 	}
 	
@@ -295,7 +295,7 @@ public class Test {
 	private static void genGameList() {
 		try {
 			Connection conn = DBMgr.getCon("helper");
-			PreparedStatement stmt = conn.prepareStatement("select game,cid,chid,worker,activity from tcmcctask where game<>''   order by game");
+			PreparedStatement stmt = conn.prepareStatement("select game,cid,chid,worker,activity from tcmcctask where game<>''  and status>=1 order by game");
 			ResultSet rs = stmt.executeQuery();
 			while (rs.next()) {
 				System.out.println(rs.getString(2) + "-" + rs.getString(3) + "\t" + rs.getString(1));// + "\t" + rs.getString(4) + "\t" + rs.getString(5) + "");
@@ -349,6 +349,11 @@ public class Test {
 				System.out.println("CID:" + rs.getString(2));
 				System.out.println("CHID:" + rs.getString(3));
 				System.out.println("CPID:" + rs.getString(4));
+				stmt = conn.prepareStatement("select consumexml from tcmccgame where CID = " + rs.getString(2));
+				rs = stmt.executeQuery();
+				if (rs.next()) {
+					System.out.println(rs.getString(1));
+				}
 			}
 			DbUtils.closeQuietly(conn);
 		} catch (Exception e) {
@@ -426,6 +431,15 @@ public class Test {
 			stmt = conn.prepareStatement("update tcmcctask a,tchannel b set game=concat(game,concat('-',b.channel)) where a.chid=b.chid and apkname = ?");
 			stmt.setString(1, apkname);
 			stmt.executeUpdate();
+			stmt = conn.prepareStatement("insert into tcmccgame (cid,game,consumexml) values (?,?,?)");
+			stmt.setString(1, cid);
+			stmt.setString(2, game);
+			stmt.setString(3, consumeXml);
+			try{
+				stmt.executeUpdate();
+			} catch (Exception e) {
+				System.out.println(e.getMessage());
+			}
 			DbUtils.closeQuietly(conn);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
