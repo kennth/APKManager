@@ -77,7 +77,7 @@ public class APKManageThread extends Thread {
 			adb.clearLogcat();
 			ADBLogger adblog = new ADBLogger(adb.getQueue(), cmd);
 			adblog.start();
-			task = runner.query(conn, "select activity,apkname,status from tcmcctask where left(worker,3)<=" + device.getId() + " and right(worker,3)>=" + device.getId(),
+			task = runner.query(conn, "select activity,apkname,status from tcmcctask where status>=0 and left(worker,3)<=" + device.getId() + " and right(worker,3)>=" + device.getId(),
 					new BeanHandler<CMCCTask>(CMCCTask.class));
 			String tmp;
 			long st = System.currentTimeMillis();
@@ -105,7 +105,7 @@ public class APKManageThread extends Thread {
 					adb.sqlUpdate("update tcmcctask set status=1 where cid=" + task.getCid() + " and chid=" + task.getChid());
 				}
 				if (System.currentTimeMillis() - st > 60 * 1000) {
-					task = runner.query(conn, "select activity,apkname,status from tcmcctask where left(worker,3)<=" + device.getId() + " and right(worker,3)>=" + device.getId(),
+					task = runner.query(conn, "select activity,apkname,status from tcmcctask where status>=0 and left(worker,3)<=" + device.getId() + " and right(worker,3)>=" + device.getId(),
 							new BeanHandler<CMCCTask>(CMCCTask.class));
 					st = System.currentTimeMillis();
 				}
