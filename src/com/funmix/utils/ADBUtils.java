@@ -62,7 +62,7 @@ public class ADBUtils {
 		if (new File(workDir).exists() == false) {
 			FileUtils.forceMkdir(new File(workDir));			
 		}
-		FileUtils.copyFile(new File(Utils.getCurrentPath() + "/WIFI"), new File(workDir+"/WIFI"));
+		//FileUtils.copyFile(new File(Utils.getCurrentPath() + "/WIFI"), new File(workDir+"/WIFI"));
 	}	
 
 	public int sqlUpdate(String sql){
@@ -192,6 +192,17 @@ public class ADBUtils {
 			execADB("shell am start -n " + activity);
 		}
 	}
+	
+	public String getTopActivity(){
+		String act = execADB("shell dumpsys activity | grep \"mFocusedActivity\"");
+		if(act!=null){
+			int pos = act.indexOf("u0");
+			int pos1 = act.indexOf("}");
+			if(pos>-1 && pos1>-1)
+				act = act.substring(pos+3,pos1);
+		}
+		return act;
+	}
 
 	public void stopActivity(String activity) {
 		log.info("Force stop " + activity);
@@ -199,13 +210,13 @@ public class ADBUtils {
 			execADB("shell am force-stop " + activity);
 			sleep(2000);
 		} while (getKey("Force stopping package " + activity) == -1);
-		sleep(3000);
+		sleep(2000);
 	}
 
 	public boolean clearAppData(String app) {
 		log.info(app + " clearAppData start!");
 		execADB("shell pm clear " + app);
-		sleep(3000);
+		sleep(2000);
 		log.info(app + " clearAppData end!");
 		return true;
 	}

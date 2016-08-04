@@ -28,7 +28,7 @@ public class APKManageThread extends Thread {
 	private CMCCTask			task;
 
 	public static void main(String[] args) {
-		String deviceid = "540";
+		String deviceid = "460";
 		if (args.length > 0 && args[0] != null) {
 			deviceid = args[0];
 		}
@@ -71,31 +71,56 @@ public class APKManageThread extends Thread {
 			return;
 		}
 		try {
-			String cmd = "adb -s " + device.getDevice() + " shell logcat |grep 'ActivityManager' ";
+			String cmd = "adb -s " + device.getDevice() + " shell logcat |grep -E 'HOOK|ActivityManager' ";
 			log.info(cmd);
 			adb.waitDeviceOn();
 			adb.clearLogcat();
 			ADBLogger adblog = new ADBLogger(adb.getQueue(), cmd);
 			adblog.start();
-			task = runner.query(conn, "select activity,apkname,status from tcmcctask where status>=0 and left(worker,3)<=" + device.getId() + " and right(worker,3)>=" + device.getId(),
+			task = runner.query(conn, "select activity,apkname,status,hook from tcmcctask where status>=0 and left(worker,3)<=" + device.getId() + " and right(worker,3)>=" + device.getId(),
 					new BeanHandler<CMCCTask>(CMCCTask.class));
 			String tmp;
 			long st = System.currentTimeMillis();
+			int workcount=0;
+			int pos = -1;			
+			String packname = task.getActivity();
+			packname = packname.substring(0,packname.indexOf("/"));
+			log.info("packname:" + packname);
+			String topActivity;
 			while (task.getStatus() > 0) {
 				sleep(1000);
 				if (task.getStatus() == 1) {
-					log.info("Keep game alive!");
+					log.info("Keep game alive! Workcount=" + workcount);
+					topActivity = adb.getTopActivity();
+					if(topActivity == null || topActivity.indexOf(packname)==-1){
+						//adb.stopActivity(packname);
+						//log.info(adb.clearAppData(packname));
+						log.info(adb.execADB("shell am start -n " + task.getActivity()));
+					}
 					while (adb.getQueue().size() > 0) {
 						tmp = adb.getQueue().poll();
-						// log.info(tmp);
-						if (tmp.indexOf("died") > -1 && tmp.indexOf(task.getActivity()) > -1) {
-							log.info("Game died,restart it!");
-							adb.startActivity(task.getActivity(), "Start proc " + task.getActivity().substring(0, task.getActivity().indexOf("/")) + " for activity");
-						} else {
-							// log.info("wait");
-							sleep(1000);
+						if(tmp.indexOf(packname)>-1 || tmp.indexOf("HOOK")>-1)
+							log.info(tmp);
+						pos = tmp.indexOf("workcount");
+						if(pos >-1){
+							workcount++;
+							log.info("#### WORKCOUNT=[ " +  workcount + " ] #####");
+							if(workcount>30){//cleardata,restart activity
+								//adb.stopActivity(packname);
+								log.info(adb.execADB("uninstall " + packname));
+								sleep(2000);
+								log.info(adb.execADB("install " + task.getApkname()));
+								sleep(2000);
+								adb.startActivity(task.getActivity(), packname);
+								sleep(8000);
+								if(adb.getTopActivity().indexOf(packname)==-1)
+									log.info(adb.execADB("shell am start -n " + task.getActivity()));
+								workcount = 0;
+								log.info("#### WORKCOUNT RESET #####");
+							}
 						}
 					}
+					sleep(2000);
 				}else if (task.getStatus() == 9) { //install
 					//updatehook
 					log.info("Install Game Start!");
@@ -104,11 +129,11 @@ public class APKManageThread extends Thread {
 					log.info("Install Game End!");
 					adb.sqlUpdate("update tcmcctask set status=1 where cid=" + task.getCid() + " and chid=" + task.getChid());
 				}
-				if (System.currentTimeMillis() - st > 60 * 1000) {
+				/*if (System.currentTimeMillis() - st > 60 * 1000) {
 					task = runner.query(conn, "select activity,apkname,status from tcmcctask where status>=0 and left(worker,3)<=" + device.getId() + " and right(worker,3)>=" + device.getId(),
 							new BeanHandler<CMCCTask>(CMCCTask.class));
 					st = System.currentTimeMillis();
-				}
+				}*/
 			}
 		} catch (Exception e) {
 			log.info(e);

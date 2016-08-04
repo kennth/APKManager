@@ -36,7 +36,7 @@ public class DBMgr {
                 }else{
                 	pool = (DataSource) env.lookup("jdbc/" + dsName.trim());
                 }
-                System.out.println("数据源:" + dsName);                
+                //System.out.println("数据源:" + dsName);                
                 poolmap.put(dsName,pool);
             }
             con = pool.getConnection();
