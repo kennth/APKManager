@@ -122,8 +122,9 @@ public class APKManageThread extends Thread {
 						if(tmp.indexOf(packname)>-1 || tmp.indexOf("HOOK")>-1)
 							log.info(tmp);
 						pos = tmp.indexOf("workcount");
-						if(pos >-1){
-							workcount++;
+						if(pos >-1){							
+							//workcount = Integer.parseInt(tmp.substring(pos+2,tmp.indexOf(",",pos)));
+							workcount=workcount+1;
 							log.info("#### ADD! WORKCOUNT=[ " +  workcount + " ] #####");
 							if(workcount>30){//cleardata,restart activity
 								log.info(adb.execADB("uninstall " + packname));
