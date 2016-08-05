@@ -69,6 +69,7 @@ public class APKManageThread extends Thread {
 			log.info("init Failed");
 			return;
 		}
+		String packname = "";
 		try {
 			String cmd = "adb -s " + device.getDevice() + " shell logcat |grep -E 'HOOK|ActivityManager' ";
 			log.info(cmd);
@@ -79,17 +80,23 @@ public class APKManageThread extends Thread {
 			task = runner.query(conn, "select activity,apkname,status,hook from tcmcctask where status>=0 and left(worker,3)<=" + device.getId() + " and right(worker,3)>=" + device.getId(),
 					new BeanHandler<CMCCTask>(CMCCTask.class));
 			String tmp;
-			long st = System.currentTimeMillis()+5000;
+			long st = System.currentTimeMillis()+5;
 			int workcount=0,restart=0;
 			int pos = -1;			
-			String packname = task.getActivity();
+			packname = task.getActivity();
 			packname = packname.substring(0,packname.indexOf("/"));
 			log.info("packname:" + packname);
 			String topActivity;
+			log.info(adb.execADB("uninstall " + packname));
+			sleep(1000);
+			log.info(adb.execADB("install " + task.getApkname()));
+			sleep(1000);
+			adb.startActivity(task.getActivity(), packname);
+			sleep(8000);
 			while (task.getStatus() > 0) {
 				sleep(1000);
 				if (task.getStatus() == 1) {	
-					if(System.currentTimeMillis()-st>5000){
+					if(System.currentTimeMillis()-st>5){
 						log.info("Keep game alive! Workcount=" + workcount + ",start activity=" + restart);
 						st = System.currentTimeMillis();
 					}
@@ -115,8 +122,7 @@ public class APKManageThread extends Thread {
 						workcount = 0;
 						restart =0;
 						log.info("#### WORKCOUNT RESET #####");
-					}
-						
+					}						
 					while (adb.getQueue().size() > 0) {
 						tmp = adb.getQueue().poll();
 						if(tmp.indexOf(packname)>-1 || tmp.indexOf("HOOK")>-1)
@@ -158,6 +164,9 @@ public class APKManageThread extends Thread {
 			}
 		} catch (Exception e) {
 			log.info(e);
+			//uninstall to proteck
+			log.info(adb.execADB("uninstall " + packname));
+			System.exit(0);
 		} finally {
 			if (log != null) {
 				Utils.sleep(3000);
