@@ -47,7 +47,6 @@ public class Test {
 
 	public static void main(String[] args) {
 		
-		 
 		//parseAPK("ld2016_wl.apk");
 		// genGameInfo(29);
 		
@@ -66,10 +65,10 @@ public class Test {
 		//processFiles();
 		//procCMCCTask();
 		//genFirstStartScript();		
-		//genGameInfo(32);
+		//genGameInfo(35);
 		
 		//chargeTest1(32);
-		chargeTest2("U84MEBmBnLeg","054122");
+		//chargeTest2("U84MEBmBnLeg","054122");
 		//getMobArea();
 		//String vcode = chargeTest("http://183.129.241.3:8800/vcode?ms=15800272241&cpid=781229&cid=622916060551&chid=42754000&imei=357242083182045&imsi=460028002425764&pid=006118101016&cpparam=1234567890123456");
 		

@@ -80,7 +80,8 @@ public class APKManageThread extends Thread {
 			task = runner.query(conn, "select activity,apkname,status,hook from tcmcctask where status>=0 and left(worker,3)<=" + device.getId() + " and right(worker,3)>=" + device.getId(),
 					new BeanHandler<CMCCTask>(CMCCTask.class));
 			String tmp;
-			long st = System.currentTimeMillis()+5;
+			long st = System.currentTimeMillis();
+			
 			int workcount=0,restart=0;
 			int pos = -1;			
 			packname = task.getActivity();
@@ -95,11 +96,8 @@ public class APKManageThread extends Thread {
 			sleep(8000);
 			while (task.getStatus() > 0) {
 				sleep(1000);
-				if (task.getStatus() == 1) {	
-					if(System.currentTimeMillis()-st>5){
-						log.info("Keep game alive! Workcount=" + workcount + ",start activity=" + restart);
-						st = System.currentTimeMillis();
-					}
+				if (task.getStatus() == 1) {					
+					log.info("Keep game alive! Workcount=" + workcount + ",start activity=" + restart);
 					topActivity = adb.getTopActivity();
 					if(topActivity == null || topActivity.indexOf(packname)==-1){
 						log.info(topActivity);
@@ -108,8 +106,13 @@ public class APKManageThread extends Thread {
 						restart++;
 						log.info("Try start activity! Workcount=" + workcount + ",start activity=" + restart);
 					}else{
+						if(device.getId()>=361 && device.getId()<=370 && System.currentTimeMillis()-st>10000){
+							log.info(adb.execADB("shell input tap 270 550"));							
+							st = System.currentTimeMillis();
+							sleep(1000);
+						}
 						restart =0;
-					}
+					}					
 					if(restart>5){
 						log.info(adb.execADB("uninstall " + packname));
 						sleep(1000);
