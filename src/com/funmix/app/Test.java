@@ -62,7 +62,7 @@ public class Test {
 			 //System.out.println(genTestUrl(i));
 			 genGameInfo(i);
 		 }*/
-		//processFiles();
+		processFiles();
 		//procCMCCTask();
 		//genFirstStartScript();		
 		//genGameInfo(35);
