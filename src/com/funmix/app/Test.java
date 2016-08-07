@@ -488,7 +488,14 @@ public class Test {
 			try{
 				stmt.executeUpdate();
 			} catch (Exception e) {
-				System.out.println(e.getMessage());
+				//System.out.println(e.getMessage());
+			}
+			stmt = conn.prepareStatement("insert into tchannel (chid) values (?)");
+			stmt.setString(1, chid);
+			try{
+				stmt.executeUpdate();
+			} catch (Exception e) {
+				//System.out.println(e.getMessage());
 			}
 			DbUtils.closeQuietly(conn);
 		} catch (Exception e) {
