@@ -13,11 +13,10 @@ import java.security.cert.X509Certificate;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.crypto.Cipher;
-
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.http.Consts;
 import org.apache.http.HttpHost;
@@ -36,7 +35,6 @@ import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
-
 import com.funmix.common.DBMgr;
 import com.funmix.utils.TypeUtil;
 import com.funmix.utils.Utils;
@@ -62,13 +60,13 @@ public class Test {
 			 //System.out.println(genTestUrl(i));
 			 genGameInfo(i);
 		 }*/
-		processFiles();
+		//processFiles();
 		//procCMCCTask();
 		//genFirstStartScript();		
-		//genGameInfo(35);
+		//genGameInfo(3);
 		
-		//chargeTest1(32);
-		//chargeTest2("U84MEBmBnLeg","054122");
+		//chargeTest1(1);
+		//chargeTest2("dtndDJSXuCCs","066457");
 		//getMobArea();
 		//String vcode = chargeTest("http://183.129.241.3:8800/vcode?ms=15800272241&cpid=781229&cid=622916060551&chid=42754000&imei=357242083182045&imsi=460028002425764&pid=006118101016&cpparam=1234567890123456");
 		
@@ -82,7 +80,19 @@ public class Test {
 			if(i>80)
 				break;
 		}*/
-	
+		/*Connection conn = DBMgr.getCon("helper");
+		try {
+			PreparedStatement stmt = conn.prepareStatement("insert into tdevice values (?,?,1,now(),'main')");
+			for(int i=1;i<600;i++){
+				stmt.setInt(1, i);
+				stmt.setString(2, "E3CD20" +i);
+				stmt.executeUpdate();
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+		
 	}
 	
 	private static void getMobArea() {
