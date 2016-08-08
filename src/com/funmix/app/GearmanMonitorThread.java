@@ -107,6 +107,7 @@ public class GearmanMonitorThread {
 					if (alert.length() > 0) {
 						log.warn(alert);						
 						sendAlert(alert);
+						alert = "";
 					}
 				} else {
 					log.error("get code failed!");
