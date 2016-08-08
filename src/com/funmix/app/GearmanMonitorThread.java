@@ -2,6 +2,7 @@ package com.funmix.app;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -67,24 +68,24 @@ public class GearmanMonitorThread {
 					pos = result.indexOf("<tr");
 					
 					if(wait>100){
-						System.out.println(function + ":" + wait + "," + running + "," + worker);
-						alert = "JobWait_" + wait+"_";
+						System.out.println(function + ":" + wait + "," + running + "," + worker);						
 						stmt.setString(1, function);
 						rs = stmt.executeQuery();
 						if(rs.next()){		
-							alert = alert + "_" + rs.getString(1).replaceAll("-","_") + "_" + rs.getString(2) + "_" + rs.getString(3).replaceAll(" ","-") + "\n"; 
+							alert = alert + "W=" + wait+ ":" + rs.getString(1) + "," + rs.getString(2) + "," + rs.getString(3).replaceAll(" ","-") + "\n"; 
 						}
 					}
-					if(worker == 0){
-						System.out.println(function + ":" + wait + "," + running + "," + worker);
-						alert = "ALL_Worker_Lost_";
+					if(worker == 0){						
 						stmt.setString(1, function);
 						rs = stmt.executeQuery();
-						if(rs.next() && rs.getInt(2)<100){							
-							alert = alert + rs.getString(1).replaceAll("-","_") + "_" + rs.getString(2) + "_" + rs.getString(3).replaceAll(" ","_") + "\n"; 
+						if(rs.next() && rs.getInt(2)<100){
+							System.out.println(function + ":" + wait + "," + running + "," + worker);
+							alert = alert + rs.getString(1) + "," + rs.getString(2) + "," + rs.getString(3).replaceAll(" ","-") + "\n"; 
 						}						
-					}
-					httpalert = new HttpGet("http://192.168.99.102:8100/msg?to=chenliang&text=" + alert);
+					}					
+				}
+				if(alert.length()>0){
+					httpalert = new HttpGet("http://192.168.99.102:8100/msg?to=chenliang&text=" + URLEncoder.encode(alert,"utf8"));
 					response = client.execute(httpalert);		
 					httpalert.abort();
 				}
