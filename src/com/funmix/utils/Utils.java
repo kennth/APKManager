@@ -246,6 +246,29 @@ public class Utils {
 		}
 	}
 
+	public static String execCMDNow(String cmd) {// cmd
+		// System.out.println(cmd);
+		Process p = null;
+		String result = null;
+		try {
+			p = Runtime.getRuntime().exec(cmd);
+			StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream(), "ERROR");
+			errorGobbler.start();
+			StreamGobbler outGobbler = new StreamGobbler(p.getInputStream(), "STDOUT");
+			outGobbler.start();
+			p.waitFor();			   
+		} catch (IOException e) {
+			log.error(e);
+		} catch (InterruptedException e) {
+			log.error(e);
+		} finally {
+			if (p != null) {
+				p.destroy();
+			}
+		}
+		return result;
+	}
+	
 	public static String execCMD(String cmd) {// cmd
 		// System.out.println(cmd);
 		Process p = null;
@@ -262,10 +285,10 @@ public class Utils {
 				result = result + line + "\r\n";
 			}
 			while ((line = errorReader.readLine()) != null) {
-
-				if (line != null && line.length() > 0)
-					log.error("execCMD error:" + line);
-
+				/*
+				 * if(line!=null && line.length()>0) log.error("execCMD error:"
+				 * + line);
+				 */
 			}
 			p.getOutputStream().close();
 			p.destroy();

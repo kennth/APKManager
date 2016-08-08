@@ -23,12 +23,18 @@ public class GearmanMonitorThread {
 	protected static Logger log = Log4jLogger.getLogger(GearmanMonitorThread.class);
 
 	public static void main(String[] args) {
+		System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog"); 
+		System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true"); 
+		System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.commons.httpclient", "stdout"); 
+		
 		boolean stop = false;
+		String result = null;
 		try {
+			log.info("GearmanMonitor Start!!!");
 			String url = "http://192.168.99.35/Gearman-Monitor/queue.php";
 			Connection conn = DBMgr.getCon("helper");
 			PreparedStatement stmt = conn.prepareStatement("select game,id,worker from tcmcctask where concat(concat('Worker',cid),concat('-',chid)) = ?");
-			PreparedStatement upstmt = conn.prepareStatement("update tcmcctask set area = ? where mobile = ?");
+			PreparedStatement upstmt = conn.prepareStatement("update tcmcctask set task = ?,live=? where mobile = concat(concat('Worker',cid),concat('-',chid)) = ?");
 			ResultSet rs;
 			HttpClient client = new DefaultHttpClient();
 			HttpGet httpget = new HttpGet(url);
@@ -41,7 +47,7 @@ public class GearmanMonitorThread {
 			httpget.setHeader("Accept-Encoding", "deflate");
 			httpget.setHeader("Accept-Language", "zh-CN,zh;q=0.8");
 			HttpResponse response;
-			String result;
+			
 			int resCode;
 			int pos = 0;
 			String function, alert = "";
@@ -53,9 +59,9 @@ public class GearmanMonitorThread {
 				resCode = response.getStatusLine().getStatusCode();
 				if (resCode == 200) {
 					result = EntityUtils.toString(response.getEntity());
-					httpget.abort();
+					//httpget.abort();
 					result = result.substring(result.indexOf("<tbody>") + 7, result.indexOf("</tbody>"));
-					// log.info(result);
+					//log.info(result);
 					pos = result.indexOf("<tr");
 					while (pos > 0) {
 						pos = result.indexOf("<td></td>", pos) + 9;
@@ -68,34 +74,49 @@ public class GearmanMonitorThread {
 						pos = result.indexOf(">", pos) + 1;
 						running = Integer.parseInt(result.substring(pos, result.indexOf("</td>", pos)).trim());
 						pos = result.indexOf("</td>", pos) + 6;
-						pos = result.indexOf(">", pos) + 1;
+						if(result.indexOf("images/s_warn.png",pos)>-1){
+							pos = result.indexOf("images/s_warn.png",pos);
+							pos = result.indexOf("/>", pos) + 2;
+						}else{
+							pos = result.indexOf(">", pos) + 1;
+						}
 						worker = Integer.parseInt(result.substring(pos, result.indexOf("</td>", pos)).trim());
 						result = result.substring(result.indexOf("</tr>") + 4, result.length());
 						pos = result.indexOf("<tr");
-
+						
 						if (wait > 100) {
-							log.info(function + ":" + wait + "," + running + "," + worker);
+							log.error(function + ":" + wait + "," + running + "," + worker);
 							stmt.setString(1, function);
 							rs = stmt.executeQuery();
 							if (rs.next()) {
 								alert = alert + "W=" + wait + ":" + rs.getString(1) + "," + rs.getString(2) + "," + rs.getString(3).replaceAll(" ", "-") + "\n";
 							}
 						}
-						if (worker == 0) {
+						if (worker <= 2) {
 							stmt.setString(1, function);
 							rs = stmt.executeQuery();
 							if (rs.next() && rs.getInt(2) < 100) {
-								log.info(function + ":" + wait + "," + running + "," + worker);
-								alert = alert + rs.getString(1) + "," + rs.getString(2) + "," + rs.getString(3).replaceAll(" ", "-") + "\n";
+								log.warn(function + ":" + wait + "," + running + "," + worker + " || " + rs.getString(1) + "," + rs.getString(2) + "," + rs.getString(3));
+								//alert = alert + rs.getString(1) + "," + rs.getString(2) + "," + rs.getString(3).replaceAll(" ", "-") + "\n";
 							}
 						}
+						
+						upstmt.setInt(1, wait);
+						upstmt.setInt(2, worker);
+						upstmt.setString(3,function);
 					}
 
 					if (alert.length() > 0) {
 						log.warn(alert);
 						httpalert = new HttpGet("http://192.168.99.102:8100/msg?to=chenliang&text=" + URLEncoder.encode(alert, "utf8"));
 						response = client.execute(httpalert);
-						httpalert.abort();
+						resCode = response.getStatusLine().getStatusCode();
+						if (resCode == 200) {		
+							log.info("send alert succ!");
+						}else {
+							log.error("get code failed!");
+						}
+						//httpalert.abort();
 
 					}
 					/*
@@ -105,17 +126,13 @@ public class GearmanMonitorThread {
 				} else {
 					log.error("get code failed!");
 				}
+				log.info("wait for next check!");
 				Utils.sleep(10000);
 			}
 			DbUtils.closeQuietly(conn);
-		} catch (UnsupportedEncodingException e) {
-			log.error(e);
-		} catch (ClientProtocolException e) {
-			log.error(e);
-		} catch (IOException e) {
-			log.error(e);
 		} catch (Exception e) {
 			log.error(e);
+			log.info(result);
 		}
 	}
 

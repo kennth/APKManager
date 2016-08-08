@@ -80,8 +80,7 @@ public class APKManageThread extends Thread {
 			task = runner.query(conn, "select activity,apkname,status,hook from tcmcctask where status>=0 and left(worker,3)<=" + device.getId() + " and right(worker,3)>=" + device.getId(),
 					new BeanHandler<CMCCTask>(CMCCTask.class));
 			String tmp;
-			long st = System.currentTimeMillis();
-			
+			long st = System.currentTimeMillis()+5;
 			int workcount=0,restart=0;
 			int pos = -1;			
 			packname = task.getActivity();
@@ -92,12 +91,16 @@ public class APKManageThread extends Thread {
 			sleep(1000);
 			log.info(adb.execADB("install " + task.getApkname()));
 			sleep(1000);
-			adb.startActivity(task.getActivity(), packname);
+			log.info(adb.execADB("shell am start -n " + task.getActivity()));
 			sleep(8000);
+			log.info(task.getStatus());
 			while (task.getStatus() > 0) {
 				sleep(1000);
-				if (task.getStatus() == 1) {					
-					log.info("Keep game alive! Workcount=" + workcount + ",start activity=" + restart);
+				if (task.getStatus() == 2) {	
+					if(System.currentTimeMillis()-st>5){
+						log.info("Keep game alive! Workcount=" + workcount + ",start activity=" + restart);
+						st = System.currentTimeMillis();
+					}
 					topActivity = adb.getTopActivity();
 					if(topActivity == null || topActivity.indexOf(packname)==-1){
 						log.info(topActivity);
@@ -106,19 +109,14 @@ public class APKManageThread extends Thread {
 						restart++;
 						log.info("Try start activity! Workcount=" + workcount + ",start activity=" + restart);
 					}else{
-						if(device.getId()>=361 && device.getId()<=370 && System.currentTimeMillis()-st>10000){
-							log.info(adb.execADB("shell input tap 270 550"));							
-							st = System.currentTimeMillis();
-							sleep(1000);
-						}
 						restart =0;
-					}					
+					}
 					if(restart>5){
 						log.info(adb.execADB("uninstall " + packname));
 						sleep(1000);
 						log.info(adb.execADB("install " + task.getApkname()));
 						sleep(2000);
-						adb.startActivity(task.getActivity(), packname);
+						log.info(adb.execADB("shell am start -n " + task.getActivity()));
 						sleep(8000);
 						if(adb.getTopActivity().indexOf(packname)==-1)
 							log.info(adb.execADB("shell am start -n " + task.getActivity()));

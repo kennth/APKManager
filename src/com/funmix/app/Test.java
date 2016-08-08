@@ -63,7 +63,7 @@ public class Test {
 		//processFiles();
 		//procCMCCTask();
 		//genFirstStartScript();		
-		//genGameInfo(3);
+		genGameInfo(30);
 		
 		//chargeTest1(1);
 		//chargeTest2("dtndDJSXuCCs","066457");
