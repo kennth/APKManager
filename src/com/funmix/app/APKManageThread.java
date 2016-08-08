@@ -104,6 +104,8 @@ public class APKManageThread extends Thread {
 					topActivity = adb.getTopActivity();
 					if(topActivity == null || topActivity.indexOf(packname)==-1){
 						log.info(topActivity);
+						log.info(adb.execADB("shell am force-stop " + task.getActivity()));
+						sleep(2000);
 						log.info(adb.execADB("shell am start -n " + task.getActivity()));
 						sleep(2000);
 						restart++;

@@ -14,14 +14,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-
 import com.funmix.common.DBMgr;
 import com.funmix.common.Log4jLogger;
 import com.funmix.utils.Utils;
 
 public class GearmanMonitorThread {
 	protected static Logger log = Log4jLogger.getLogger(GearmanMonitorThread.class);
-
+	static long lastalert = 0;
 	public static void main(String[] args) {
 		System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog"); 
 		System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true"); 
@@ -52,8 +51,7 @@ public class GearmanMonitorThread {
 			int pos = 0;
 			String function, alert = "";
 			int wait, running, worker;
-			HttpGet httpalert;
-
+			
 			while (!stop) {
 				response = client.execute(httpget);
 				resCode = response.getStatusLine().getStatusCode();
@@ -89,7 +87,7 @@ public class GearmanMonitorThread {
 							stmt.setString(1, function);
 							rs = stmt.executeQuery();
 							if (rs.next()) {
-								alert = alert + "W=" + wait + ":" + rs.getString(1) + "," + rs.getString(2) + "," + rs.getString(3).replaceAll(" ", "-") + "\n";
+								alert = alert + "Wait=" + wait + ":" + rs.getString(1) + "," + rs.getString(2) + "," + rs.getString(3).replaceAll(" ", "-") + "\n";
 							}
 						}
 						if (worker <= 2) {
@@ -99,41 +97,45 @@ public class GearmanMonitorThread {
 								log.warn(function + ":" + wait + "," + running + "," + worker + " || " + rs.getString(1) + "," + rs.getString(2) + "," + rs.getString(3));
 								//alert = alert + rs.getString(1) + "," + rs.getString(2) + "," + rs.getString(3).replaceAll(" ", "-") + "\n";
 							}
-						}
-						
-						upstmt.setInt(1, wait);
+						}						
+						/*upstmt.setInt(1, wait);
 						upstmt.setInt(2, worker);
 						upstmt.setString(3,function);
+						upstmt.executeUpdate();*/
 					}
 
 					if (alert.length() > 0) {
-						log.warn(alert);
-						httpalert = new HttpGet("http://192.168.99.102:8100/msg?to=chenliang&text=" + URLEncoder.encode(alert, "utf8"));
-						response = client.execute(httpalert);
-						resCode = response.getStatusLine().getStatusCode();
-						if (resCode == 200) {		
-							log.info("send alert succ!");
-						}else {
-							log.error("get code failed!");
-						}
-						//httpalert.abort();
-
+						log.warn(alert);						
+						sendAlert(alert);
 					}
-					/*
-					 * upstmt.setString(1, area); upstmt.setString(2,
-					 * rs.getString(1)); upstmt.executeUpdate();
-					 */
 				} else {
 					log.error("get code failed!");
 				}
 				log.info("wait for next check!");
 				Utils.sleep(10000);
 			}
-			DbUtils.closeQuietly(conn);
+			DbUtils.closeQuietly(conn);			
 		} catch (Exception e) {
 			log.error(e);
 			log.info(result);
 		}
+	}
+	
+
+	
+	private static void sendAlert(String alert) throws ClientProtocolException, IOException{
+		if(System.currentTimeMillis() - lastalert < 5*60*1000) //5分钟最多发一次警告
+			return;
+		HttpGet httpalert = new HttpGet("http://192.168.99.102:8100/msg?to=chenliang&text=" + URLEncoder.encode(alert, "utf8"));
+		HttpClient client = new DefaultHttpClient();
+		HttpResponse response = client.execute(httpalert);
+		int resCode = response.getStatusLine().getStatusCode();
+		if (resCode == 200) {		
+			log.info("send alert succ!");
+		}else {
+			log.error("get code failed!");
+		}
+		lastalert = System.currentTimeMillis();
 	}
 
 }
