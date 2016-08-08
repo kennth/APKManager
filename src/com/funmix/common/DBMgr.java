@@ -27,8 +27,8 @@ public class DBMgr {
                 }
                 if(env == null){ //数据源不存在
                 	BasicDataSource bds = new BasicDataSource();
-                	//bds.setUrl("jdbc:mysql://192.168.99.10:3306/" + dsName + "?characterEncoding=UTF-8");
-                	bds.setUrl("jdbc:mysql://localhost:3306/" + dsName + "?characterEncoding=UTF-8");
+                	bds.setUrl("jdbc:mysql://192.168.99.10:3306/" + dsName + "?characterEncoding=UTF-8");
+                	//bds.setUrl("jdbc:mysql://localhost:3306/" + dsName + "?characterEncoding=UTF-8");
                     bds.setDriverClassName("com.mysql.jdbc.Driver");  
                     bds.setUsername("root");  
                     bds.setPassword("funmix"); 
