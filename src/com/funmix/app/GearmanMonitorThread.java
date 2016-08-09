@@ -55,6 +55,7 @@ public class GearmanMonitorThread {
 			while (!stop) {
 				response = client.execute(httpget);
 				resCode = response.getStatusLine().getStatusCode();
+				log.info("Start parse gearman data!");
 				if (resCode == 200) {
 					result = EntityUtils.toString(response.getEntity());
 					//httpget.abort();
@@ -98,10 +99,10 @@ public class GearmanMonitorThread {
 								//alert = alert + rs.getString(1) + "," + rs.getString(2) + "," + rs.getString(3).replaceAll(" ", "-") + "\n";
 							}
 						}						
-						/*upstmt.setInt(1, wait);
+						upstmt.setInt(1, wait);
 						upstmt.setInt(2, worker);
 						upstmt.setString(3,function);
-						upstmt.executeUpdate();*/
+						upstmt.executeUpdate();
 					}
 
 					if (alert.length() > 0) {
