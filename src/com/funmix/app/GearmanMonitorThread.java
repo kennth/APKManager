@@ -33,7 +33,7 @@ public class GearmanMonitorThread {
 			String url = "http://192.168.99.35/Gearman-Monitor/queue.php";
 			Connection conn = DBMgr.getCon("helper");
 			PreparedStatement stmt = conn.prepareStatement("select game,id,worker from tcmcctask where concat(concat('Worker',cid),concat('-',chid)) = ?");
-			PreparedStatement upstmt = conn.prepareStatement("update tcmcctask set task = ?,live=? where mobile = concat(concat('Worker',cid),concat('-',chid)) = ?");
+			PreparedStatement upstmt = conn.prepareStatement("update tcmcctask set tasks = ?,live=?,lastupdate=now() where concat(concat('Worker',cid),concat('-',chid)) = ?");
 			ResultSet rs;
 			HttpClient client = new DefaultHttpClient();
 			HttpGet httpget = new HttpGet(url);
@@ -58,7 +58,6 @@ public class GearmanMonitorThread {
 				log.info("Start parse gearman data!");
 				if (resCode == 200) {
 					result = EntityUtils.toString(response.getEntity());
-					//httpget.abort();
 					result = result.substring(result.indexOf("<tbody>") + 7, result.indexOf("</tbody>"));
 					//log.info(result);
 					pos = result.indexOf("<tr");
@@ -119,7 +118,7 @@ public class GearmanMonitorThread {
 			DbUtils.closeQuietly(conn);			
 		} catch (Exception e) {
 			log.error(e);
-			log.info(result);
+			//log.info(result);
 		}
 	}
 	
