@@ -90,6 +90,7 @@ public class APKManageThread extends Thread {
 			return;
 		}
 		String packname = "";
+		String topActivity = null;
 		try {
 			String cmd = "adb -s " + device.getDevice() + " shell logcat |grep -E 'HOOK|ActivityManager' ";
 			log.info(cmd);
@@ -106,8 +107,8 @@ public class APKManageThread extends Thread {
 			packname = task.getActivity();
 			packname = packname.substring(0,packname.indexOf("/"));
 			log.info("packname:" + packname);
-			String topActivity;
-			log.info(adb.execADB("shell am start -n " + task.getActivity()));
+			//restartActivity
+			restartActivity();
 			while((tmp=Utils.getLogbykey("Load work count", queue))==null){
 				sleep(1000);			
 				if(System.currentTimeMillis() -st > 60){//超过1分钟没装载成功
