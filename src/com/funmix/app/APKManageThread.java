@@ -2,12 +2,10 @@ package com.funmix.app;
 
 import java.sql.Connection;
 import java.util.LinkedList;
-
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.log4j.Logger;
-
 import com.funmix.common.DBMgr;
 import com.funmix.common.Log4jLogger;
 import com.funmix.model.CMCCTask;
@@ -63,6 +61,28 @@ public class APKManageThread extends Thread {
 		log.info("init end");
 		return true;
 	}
+	
+	private void restartActivity() throws InterruptedException{
+		log.info(adb.execADB("shell am force-stop " + task.getActivity()));
+		sleep(2000);
+		log.info(adb.execADB("shell am start -n " + task.getActivity()));
+		sleep(8000);
+	}
+	
+	private void reinstallActivity() throws InterruptedException{
+		String packname = task.getActivity();
+		packname = packname.substring(0,packname.indexOf("/"));
+		log.info(adb.execADB("uninstall " + packname));
+		sleep(1000);
+		log.info(adb.execADB("install " + task.getApkname()));
+		sleep(2000);
+		log.info(adb.execADB("shell am start -n " + task.getActivity()));
+		sleep(8000);
+		if(adb.getTopActivity().indexOf(packname)==-1){
+			log.info(adb.execADB("shell am start -n " + task.getActivity()));
+			sleep(2000);
+		}
+	}
 
 	public void run() {
 		if (init() == false) {
@@ -80,48 +100,44 @@ public class APKManageThread extends Thread {
 			task = runner.query(conn, "select activity,apkname,status,hook from tcmcctask where status>=0 and left(worker,3)<=" + device.getId() + " and right(worker,3)>=" + device.getId(),
 					new BeanHandler<CMCCTask>(CMCCTask.class));
 			String tmp;
-			long st = System.currentTimeMillis()+5;
+			long st = System.currentTimeMillis();
 			int workcount=0,restart=0;
 			int pos = -1;			
 			packname = task.getActivity();
 			packname = packname.substring(0,packname.indexOf("/"));
 			log.info("packname:" + packname);
 			String topActivity;
-			log.info(adb.execADB("uninstall " + packname));
-			sleep(1000);
-			log.info(adb.execADB("install " + task.getApkname()));
-			sleep(1000);
 			log.info(adb.execADB("shell am start -n " + task.getActivity()));
+			while((tmp=Utils.getLogbykey("Load work count", queue))==null){
+				sleep(1000);			
+				if(System.currentTimeMillis() -st > 60){//超过1分钟没装载成功
+					log.error("load workcount timeout!");
+					restartActivity();
+				}
+			}
+			log.info(tmp);
+			tmp = tmp.substring(tmp.indexOf(":")+1,tmp.length()).trim();
+			workcount = Integer.parseInt(tmp);
 			sleep(8000);
-			log.info(task.getStatus());
+			log.info(TypeUtil.typeToString("", task));
 			while (task.getStatus() > 0) {
 				sleep(1000);
 				if (task.getStatus() == 2) {	
-					if(System.currentTimeMillis()-st>5){
+					if(System.currentTimeMillis()-st>10){
 						log.info("Keep game alive! Workcount=" + workcount + ",start activity=" + restart);
 						st = System.currentTimeMillis();
 					}
 					topActivity = adb.getTopActivity();
 					if(topActivity == null || topActivity.indexOf(packname)==-1){
-						log.info(topActivity);
-						log.info(adb.execADB("shell am force-stop " + task.getActivity()));
-						sleep(2000);
-						log.info(adb.execADB("shell am start -n " + task.getActivity()));
-						sleep(2000);
-						restart++;
-						log.info("Try start activity! Workcount=" + workcount + ",start activity=" + restart);
+						log.info("Current top activity is wrong:" + topActivity);
+						log.info("Try restart activity! Workcount=" + workcount + ",start activity=" + restart);
+						restartActivity();
+						restart++;						
 					}else{
 						restart =0;
 					}
-					if(restart>5){
-						log.info(adb.execADB("uninstall " + packname));
-						sleep(1000);
-						log.info(adb.execADB("install " + task.getApkname()));
-						sleep(2000);
-						log.info(adb.execADB("shell am start -n " + task.getActivity()));
-						sleep(8000);
-						if(adb.getTopActivity().indexOf(packname)==-1)
-							log.info(adb.execADB("shell am start -n " + task.getActivity()));
+					if(restart>5){	//reinstall
+						reinstallActivity();
 						workcount = 0;
 						restart =0;
 						log.info("#### WORKCOUNT RESET #####");
@@ -132,18 +148,11 @@ public class APKManageThread extends Thread {
 							log.info(tmp);
 						pos = tmp.indexOf("workcount");
 						if(pos >-1){							
-							//workcount = Integer.parseInt(tmp.substring(pos+2,tmp.indexOf(",",pos))); //gittest
-							workcount=workcount+1;
-							log.info("#### ADD! WORKCOUNT=[ " +  workcount + " ] #####");
-							if(workcount>30){//cleardata,restart activity
-								log.info(adb.execADB("uninstall " + packname));
-								sleep(1000);
-								log.info(adb.execADB("install " + task.getApkname()));
-								sleep(2000);
-								adb.startActivity(task.getActivity(), packname);
-								sleep(8000);
-								if(adb.getTopActivity().indexOf(packname)==-1)
-									log.info(adb.execADB("shell am start -n " + task.getActivity()));
+							workcount = Integer.parseInt(tmp.substring(pos+2,tmp.indexOf(",",pos))); 
+							//workcount=workcount+1;
+							log.info("#### GET WORKCOUNT=[ " +  workcount + " ] #####");
+							if(workcount>=30){//cleardata,restart activity
+								reinstallActivity();
 								workcount = 0;
 								restart =0;
 								log.info("#### WORKCOUNT RESET #####");
@@ -167,8 +176,6 @@ public class APKManageThread extends Thread {
 			}
 		} catch (Exception e) {
 			log.info(e);
-			//uninstall to proteck
-			log.info(adb.execADB("uninstall " + packname));
 			System.exit(0);
 		} finally {
 			if (log != null) {

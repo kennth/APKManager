@@ -239,6 +239,25 @@ public class Utils {
 		}
 		return -1;
 	}
+	
+	public static String getLogbykey(String key, LinkedList<String> queue) {
+		String line = "";
+		try {
+			while (queue.size() > 0) {
+				line = queue.poll();
+				if (line == null || line.trim().length() == 0) {
+					log.error("ERROR:get null from queue");
+					break;
+				}				
+				if (line.indexOf(key) > -1) {
+						return line;				
+				}
+			}
+		} catch (Exception e) {
+			log.error(e);
+		}
+		return null;
+	}
 
 	public static void waitKey(String key, LinkedList<String> queue) {
 		while (getKey(key, queue) == -1) {

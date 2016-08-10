@@ -63,10 +63,10 @@ public class Test {
 		//processFiles();
 		//procCMCCTask();
 		//genFirstStartScript();		
-		genGameInfo(7);
+		//genGameInfo(7);
 		
 		//chargeTest1(1);
-		//chargeTest2("dtndDJSXuCCs","066457");
+		chargeTest2("gTpbMUqDzukl","066457");
 		//getMobArea();
 		//String vcode = chargeTest("http://183.129.241.3:8800/vcode?ms=15800272241&cpid=781229&cid=622916060551&chid=42754000&imei=357242083182045&imsi=460028002425764&pid=006118101016&cpparam=1234567890123456");
 		
