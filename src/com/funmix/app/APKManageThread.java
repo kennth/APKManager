@@ -62,16 +62,14 @@ public class APKManageThread extends Thread {
 		return true;
 	}
 	
-	private void restartActivity() throws InterruptedException{
-		log.info(adb.execADB("shell am force-stop " + task.getActivity()));
+	private void restartActivity(String packname) throws InterruptedException{
+		log.info(adb.execADB("shell am force-stop " + packname));
 		sleep(2000);
 		log.info(adb.execADB("shell am start -n " + task.getActivity()));
 		sleep(8000);
 	}
 	
-	private void reinstallActivity() throws InterruptedException{
-		String packname = task.getActivity();
-		packname = packname.substring(0,packname.indexOf("/"));
+	private void reinstallActivity(String packname) throws InterruptedException{
 		log.info(adb.execADB("uninstall " + packname));
 		sleep(1000);
 		log.info(adb.execADB("install " + task.getApkname()));
@@ -108,12 +106,12 @@ public class APKManageThread extends Thread {
 			packname = packname.substring(0,packname.indexOf("/"));
 			log.info("packname:" + packname);
 			//restartActivity
-			restartActivity();
+			restartActivity(packname);
 			while((tmp=Utils.getLogbykey("Load work count", queue))==null){
 				sleep(1000);			
 				if(System.currentTimeMillis() -st > 60){//超过1分钟没装载成功
 					log.error("load workcount timeout!");
-					restartActivity();
+					restartActivity(packname);
 				}
 			}
 			log.info(tmp);
@@ -132,13 +130,13 @@ public class APKManageThread extends Thread {
 					if(topActivity == null || topActivity.indexOf(packname)==-1){
 						log.info("Current top activity is wrong:" + topActivity);
 						log.info("Try restart activity! Workcount=" + workcount + ",start activity=" + restart);
-						restartActivity();
+						restartActivity(packname);
 						restart++;						
 					}else{
 						restart =0;
 					}
 					if(restart>5){	//reinstall
-						reinstallActivity();
+						reinstallActivity(packname);
 						workcount = 0;
 						restart =0;
 						log.info("#### WORKCOUNT RESET #####");
@@ -153,7 +151,7 @@ public class APKManageThread extends Thread {
 							//workcount=workcount+1;
 							log.info("#### GET WORKCOUNT=[ " +  workcount + " ] #####");
 							if(workcount>=30){//cleardata,restart activity
-								reinstallActivity();
+								reinstallActivity(packname);
 								workcount = 0;
 								restart =0;
 								log.info("#### WORKCOUNT RESET #####");
