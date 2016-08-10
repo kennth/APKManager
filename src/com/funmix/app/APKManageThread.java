@@ -115,7 +115,7 @@ public class APKManageThread extends Thread {
 				}
 			}
 			log.info(tmp);
-			tmp = tmp.substring(tmp.indexOf(":")+1,tmp.length()).trim();
+			tmp = tmp.substring(tmp.indexOf("count")+8,tmp.length()).trim();
 			workcount = Integer.parseInt(tmp);
 			sleep(8000);
 			log.info(TypeUtil.typeToString("", task));
